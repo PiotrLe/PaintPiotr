@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing.Printing;
+using System.Media;
 using System.Windows.Forms;
 
 namespace PaintPiotr
@@ -36,7 +30,7 @@ namespace PaintPiotr
 
         private void color_Click(object sender, EventArgs e)
         {
-            PictureBox p = (PictureBox)sender;
+            ToolStripButton p = (ToolStripButton)sender;
             paintColor = p.BackColor;
             pen.Color = p.BackColor;
         }
@@ -59,9 +53,6 @@ namespace PaintPiotr
                     {
                         gr.DrawLine(pen, new Point(x, y), e.Location);
                     }
-
-
-
                     x = e.X;
                     y = e.Y;
                     panel1.Invalidate();
@@ -80,19 +71,20 @@ namespace PaintPiotr
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            size = Int16.Parse(((Button)sender).Text) * 5;
-            pen.Width = Int16.Parse(((Button)sender).Text) * 5;
+            size = Int16.Parse(((ToolStripButton)sender).Text) * 5;
+            pen.Width = Int16.Parse(((ToolStripButton)sender).Text) * 5;
         }
 
         private void pictureBox7_Click(object sender, EventArgs e)
         {
+            tool = 1;
             pen.Color = Color.White;
             paintColor = Color.White;
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
-            Button button = (Button)sender;
+            ToolStripButton button = (ToolStripButton)sender;
             switch (button.Text)
             {
                 case "Gwiazdka":tool = 4;
@@ -101,7 +93,12 @@ namespace PaintPiotr
                     break;
                 case "Kolko": tool = 3;
                     break;
+                case "Olowek": tool = 1;
+                    pen.Color = Color.Black;
+                    paintColor = Color.Black;
+                    break;
                 default: tool = 1;
+                    paintColor = Color.Black;
                     break;
             }
         }
@@ -163,6 +160,104 @@ namespace PaintPiotr
             {
                 bmap.Save(dialog.FileName);
             }
+        }
+
+        private void zakończToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DialogResult result = MessageBox.Show("Na pewno chcesz zakończyć?", "Wyjście", MessageBoxButtons.YesNo);
+            if (result == DialogResult.Yes)
+            {
+                Environment.Exit(0);
+            }
+            else
+            {
+                MessageBox.Show("To wracajmy do rysowania z muzyką !");
+            }
+        }
+
+        private void informacjeOProgramieToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Autor: Piotr Lewczuk\n" +
+                "Muzyka: Piotr Lewczuk\n" +
+                "Ze specjalnymi podziękowaniami dla prowadzącego przedmiot \nProgramowanie w C#");
+        }
+
+        private void checkBox1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                SoundPlayer soundPlayer = new SoundPlayer(PaintPiotr.Properties.Resources.Death_dance);
+                if (checkBox1.Checked) { 
+                soundPlayer.Play();
+                }
+                else { 
+                soundPlayer.Stop();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error message - " + ex.Message);
+            }
+        }
+
+        private void drukujToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            PrintDocument doc = new PrintDocument();
+            doc.PrintPage += this.Doc_PrintPage;
+
+            printDialog1 = new PrintDialog();
+            printDialog1.Document = doc;
+
+            if (printDialog1.ShowDialog() == DialogResult.OK)
+            {
+                doc.Print();
+            }
+        }
+
+        private void Doc_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            Font font = new Font("Arial", 30);
+
+            float x = e.MarginBounds.Left;
+            float y = e.MarginBounds.Top;
+
+            float lineHeight = font.GetHeight(e.Graphics);
+
+
+            e.Graphics.DrawString("Your orginal paint picture!", font, Brushes.Black, x, y);
+            
+            y += lineHeight;
+
+            e.Graphics.DrawImage(bmap, x, y);
+
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            bmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+            panel1.Invalidate();
+
+        }
+
+        private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
+
+        private void toolStrip2_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
+
+        private void toolStripButton26_Click(object sender, EventArgs e)
+        {
+            using (Graphics gfx = Graphics.FromImage(bmap))
+            using (SolidBrush brush = new SolidBrush(paintColor))
+            {
+                gfx.FillRectangle(brush, 0, 0, panel1.Width, panel1.Height);
+            }
+            panel1.Invalidate();
         }
     }
 }
