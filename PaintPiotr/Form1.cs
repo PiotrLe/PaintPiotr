@@ -8,34 +8,45 @@ namespace PaintPiotr
 {
     public partial class Form1 : Form
     {
-        Bitmap bmap;
+
+        // bitmap to store drawings
+        Bitmap bitmap;
+        // cordinates for painting
         int x = -1;
         int y = -1;
+        // set to true if mouse click panel
         bool moving = false;
+        // size of tools
         int size = 5;
+        // chosen tool, starting value is pen
         int tool = 1;
+        // chosen paint color, initial value is black
         Color paintColor = Color.Black;
-        int sizeFigure = 10;
-
-
+        // standard size for figures it is multiplied by size while switching to larger size;
+        readonly int basicFigureSize = 10;
+        // pen declaration
         Pen pen;
 
+        //Contains all buttons and panels for drawings.
         public Form1()
         {
             InitializeComponent();
-            bmap = new Bitmap(panel1.Width, panel1.Height);
+            bitmap = new Bitmap(panel1.Width, panel1.Height);
             pen = new Pen(paintColor, size);
+            // for drawing in round shape
             pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
         }
 
-        private void color_Click(object sender, EventArgs e)
+        // Method responsible for choosing color
+        private void Color_Click(object sender, EventArgs e)
         {
             ToolStripButton p = (ToolStripButton)sender;
             paintColor = p.BackColor;
             pen.Color = p.BackColor;
         }
 
-        private void panel1_MouseDown(object sender, MouseEventArgs e)
+        //Method responsible for handling mouse down event
+        private void Panel1MouseDown(object sender, MouseEventArgs e)
         {   
             moving = true;
             x = e.X;
@@ -43,9 +54,10 @@ namespace PaintPiotr
             panel1.Cursor = Cursors.Cross;
         }
 
-        private void panel1_MouseMove(object sender, MouseEventArgs e)
+        //Method responsible for drawing in case mouse is down and moving
+        private void Panel1MouseMove(object sender, MouseEventArgs e)
         {
-            using (Graphics gr = Graphics.FromImage(bmap))
+            using (Graphics gr = Graphics.FromImage(bitmap))
             {
                 if (moving && x != -1 && y != -1)
                 {
@@ -61,7 +73,8 @@ namespace PaintPiotr
    
         }
 
-        private void panel1_MouseUp(object sender, MouseEventArgs e)
+        //Method handles mouseUp event over panel1, it sets moving flag to false and sets coordinates to -1
+        private void Panel1MouseUp(object sender, MouseEventArgs e)
         {
             moving = false;
             x = -1;
@@ -69,20 +82,28 @@ namespace PaintPiotr
             panel1.Cursor = Cursors.Default;
         }
 
-        private void button1_Click_1(object sender, EventArgs e)
+        //Method handles change size buttons.
+        private void ChangeSizeButton(object sender, EventArgs e)
         {
             size = Int16.Parse(((ToolStripButton)sender).Text) * 5;
             pen.Width = Int16.Parse(((ToolStripButton)sender).Text) * 5;
         }
 
-        private void pictureBox7_Click(object sender, EventArgs e)
+        //Method allows to pick eraser tool, it is using pen but with white paint.
+        private void EraserClick(object sender, EventArgs e)
         {
             tool = 1;
             pen.Color = Color.White;
             paintColor = Color.White;
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        //Method allows to chose tool:
+        // 1 for pen
+        // 2 for rectancle
+        // 3 for circle
+        // 4 for start
+        // Keep in mind that it is based on the button text.
+        private void ChooseToolButton(object sender, EventArgs e)
         {
             ToolStripButton button = (ToolStripButton)sender;
             switch (button.Text)
@@ -103,17 +124,18 @@ namespace PaintPiotr
             }
         }
 
-        private void panel1_Click(object sender, EventArgs e)
+        // Method invoked draw shape only in case that appropriate tool was choosen
+        private void Panel1Click(object sender, EventArgs e)
         {
-            using (Graphics gr = Graphics.FromImage(bmap))
+            using (Graphics gr = Graphics.FromImage(bitmap))
             {
                 if (tool == 2)
                 {
-                    gr.FillRectangle(new SolidBrush(paintColor), x, y, sizeFigure * size, sizeFigure * size);
+                    gr.FillRectangle(new SolidBrush(paintColor), x, y, basicFigureSize * size, basicFigureSize * size);
                 }
                 if (tool == 3)
                 {
-                    gr.FillEllipse(new SolidBrush(paintColor), x, y, sizeFigure * size, sizeFigure * size);
+                    gr.FillEllipse(new SolidBrush(paintColor), x, y, basicFigureSize * size, basicFigureSize * size);
                 }
                 if (tool == 4)
                 {
@@ -123,46 +145,42 @@ namespace PaintPiotr
             }
             panel1.Invalidate();
         }
-
-        private void wczytajToolStripMenuItem_Click(object sender, EventArgs e)
+        // Load a file
+        private void LoadToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (Graphics gr = Graphics.FromImage(bmap))
+            using (Graphics gr = Graphics.FromImage(bitmap))
             {
                 openFileDialog1.Filter = "Image Files(*.jpg; *.jpeg; *.gif; *.bmp)|*.jpg; *.jpeg; *.gif; *.bmp";
                 if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 {
-                    bmap = new Bitmap(openFileDialog1.FileName);
+                    bitmap = new Bitmap(openFileDialog1.FileName);
                     panel1.Invalidate();
                 }
             }
         }
-
-        private void plikToolStripMenuItem_Click(object sender, EventArgs e)
+        //Saving always as File.jpg
+        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            bitmap.Save("File.jpg");
         }
 
-        private void zapiszToolStripMenuItem_Click(object sender, EventArgs e)
+        private void Panel1_Paint(object sender, PaintEventArgs e)
         {
-            bmap.Save("File.jpg");
+            e.Graphics.DrawImage(bitmap, Point.Empty);
         }
 
-        private void panel1_Paint(object sender, PaintEventArgs e)
-        {
-            e.Graphics.DrawImage(bmap, Point.Empty);
-        }
-
-        private void zapiszJakoToolStripMenuItem_Click(object sender, EventArgs e)
+        //Save as ... option
+        private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog dialog = new SaveFileDialog();
             dialog.Filter = "JPEG|*.jpg";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                bmap.Save(dialog.FileName);
+                bitmap.Save(dialog.FileName);
             }
         }
-
-        private void zakończToolStripMenuItem_Click(object sender, EventArgs e)
+        //Close application from droplist. 
+        private void CloseToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DialogResult result = MessageBox.Show("Na pewno chcesz zakończyć?", "Wyjście", MessageBoxButtons.YesNo);
             if (result == DialogResult.Yes)
@@ -175,14 +193,16 @@ namespace PaintPiotr
             }
         }
 
-        private void informacjeOProgramieToolStripMenuItem_Click(object sender, EventArgs e)
+        //Information about program and so on
+        private void InformationAboutProgramToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Autor: Piotr Lewczuk\n" +
                 "Muzyka: Piotr Lewczuk\n" +
                 "Ze specjalnymi podziękowaniami dla prowadzącego przedmiot \nProgramowanie w C#");
         }
 
-        private void checkBox1_Click(object sender, EventArgs e)
+        //Plays and stops music
+        private void MusicCheckBox_Click(object sender, EventArgs e)
         {
             try
             {
@@ -200,7 +220,8 @@ namespace PaintPiotr
             }
         }
 
-        private void drukujToolStripMenuItem_Click(object sender, EventArgs e)
+        //Method responsible for handling print button
+        private void PrintToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
             PrintDocument doc = new PrintDocument();
@@ -214,7 +235,7 @@ namespace PaintPiotr
                 doc.Print();
             }
         }
-
+        //Method responsible for printing page, it writes one sentence and then convert to document.
         private void Doc_PrintPage(object sender, PrintPageEventArgs e)
         {
             Font font = new Font("Arial", 30);
@@ -229,35 +250,39 @@ namespace PaintPiotr
             
             y += lineHeight;
 
-            e.Graphics.DrawImage(bmap, x, y);
+            e.Graphics.DrawImage(bitmap, x, y);
 
         }
 
-        private void button8_Click(object sender, EventArgs e)
+        // Method rotates all bitmap with 90 deggres
+        private void RotationButton_Click(object sender, EventArgs e)
         {
-            bmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+            bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
             panel1.Invalidate();
 
         }
 
-        private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        // Method fills entire pane with picked color
+        private void FillBucket_Click(object sender, EventArgs e)
         {
-
-        }
-
-        private void toolStrip2_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-
-        }
-
-        private void toolStripButton26_Click(object sender, EventArgs e)
-        {
-            using (Graphics gfx = Graphics.FromImage(bmap))
+            using (Graphics gfx = Graphics.FromImage(bitmap))
             using (SolidBrush brush = new SolidBrush(paintColor))
             {
                 gfx.FillRectangle(brush, 0, 0, panel1.Width, panel1.Height);
             }
             panel1.Invalidate();
+        }
+
+        // Method responsible for creating new file. It simply creating new bitmap.
+        private void NewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bitmap = new Bitmap(panel1.Width, panel1.Height);
+            panel1.Invalidate();
+        }
+
+        private void NotImplementedYetMessageClick(object sender, EventArgs e)
+        {
+            MessageBox.Show("Jescze nie zaimplementowano");
         }
     }
 }
